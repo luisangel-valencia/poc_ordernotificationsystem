@@ -150,23 +150,23 @@ This implementation plan breaks down the AWS event-driven order processing syste
     - Test message parsing errors
     - _Requirements: 5.3, 5.4, 5.5_
 
-- [ ] 6. Checkpoint - Verify Lambda functions implementation
+- [x] 6. Checkpoint - Verify Lambda functions implementation
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 7. Create CloudFormation infrastructure template
-  - [ ] 7.1 Create CloudFormation template structure and parameters
+- [x] 7. Create CloudFormation infrastructure template
+  - [x] 7.1 Create CloudFormation template structure and parameters
     - Create infrastructure/template.yaml with AWSTemplateFormatVersion and Description
     - Define Parameters section (Environment, Version, DeploymentBucket)
     - _Requirements: 6.8_
   
-  - [ ] 7.2 Define DynamoDB tables in CloudFormation
+  - [x] 7.2 Define DynamoDB tables in CloudFormation
     - Define OrdersTable resource with OrderId as partition key
     - Configure on-demand billing, point-in-time recovery, and encryption
     - Define AuditLogsTable resource with AuditId (PK) and Timestamp (SK)
     - Add OrderIdIndex GSI to AuditLogsTable
     - _Requirements: 6.1, 6.2_
   
-  - [ ] 7.3 Define SNS topic and SQS queues in CloudFormation
+  - [x] 7.3 Define SNS topic and SQS queues in CloudFormation
     - Define OrderEventsTopic SNS topic
     - Define OrderEmailQueue and OrderEmailDLQ with appropriate configuration
     - Define OrderAuditQueue and OrderAuditDLQ with appropriate configuration
@@ -175,14 +175,14 @@ This implementation plan breaks down the AWS event-driven order processing syste
     - Add SQS queue policies to allow SNS to send messages
     - _Requirements: 6.3, 6.4_
   
-  - [ ] 7.4 Define IAM roles for Lambda functions
+  - [x] 7.4 Define IAM roles for Lambda functions
     - Define OrderApiRole with permissions for DynamoDB PutItem and SNS Publish
     - Define EmailLambdaRole with permissions for SQS operations and SES SendEmail
     - Define AuditLambdaRole with permissions for SQS operations and DynamoDB PutItem
     - Include AWSLambdaBasicExecutionRole managed policy for CloudWatch Logs
     - _Requirements: 6.7_
   
-  - [ ] 7.5 Define Lambda functions in CloudFormation
+  - [x] 7.5 Define Lambda functions in CloudFormation
     - Define OrderApiFunction with .NET 8 runtime, 512 MB memory, 30s timeout
     - Define EmailLambdaFunction with .NET 8 runtime, 256 MB memory, 60s timeout
     - Define AuditLambdaFunction with .NET 8 runtime, 256 MB memory, 30s timeout
@@ -190,7 +190,7 @@ This implementation plan breaks down the AWS event-driven order processing syste
     - Create EventSourceMapping for Email and Audit Lambda functions
     - _Requirements: 6.5_
   
-  - [ ] 7.6 Define API Gateway in CloudFormation
+  - [x] 7.6 Define API Gateway in CloudFormation
     - Define OrderApi REST API resource
     - Define /order resource and POST method
     - Configure Lambda proxy integration with OrderApiFunction
@@ -198,7 +198,7 @@ This implementation plan breaks down the AWS event-driven order processing syste
     - Enable CORS for mobile app
     - _Requirements: 6.6_
   
-  - [ ] 7.7 Add CloudFormation outputs
+  - [x] 7.7 Add CloudFormation outputs
     - Output API Gateway endpoint URL
     - Output DynamoDB table names
     - Output SNS topic ARN

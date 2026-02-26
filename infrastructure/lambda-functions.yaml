@@ -1,0 +1,135 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Lambda Functions - Compute layer for Order Processing POC'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Description: Environment name for resource naming and tagging
+  
+  Version:
+    Type: String
+    Description: Version identifier for Lambda deployment packages (e.g., Git commit SHA)
+  
+  DeploymentBucket:
+    Type: String
+    Description: S3 bucket name containing Lambda deployment packages
+
+Resources:
+  OrderApiFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${Environment}-OrderApi'
+      Runtime: dotnet8
+      Handler: OrderApi::OrderApi.Function::FunctionHandler
+      Code:
+        S3Bucket: !Ref DeploymentBucket
+        S3Key: !Sub 'lambda/order-api-${Version}.zip'
+      Role:
+        Fn::ImportValue: !Sub '${Environment}-OrderApiRoleArn'
+      MemorySize: 512
+      Timeout: 30
+      Environment:
+        Variables:
+          ORDER_TABLE_NAME:
+            Fn::ImportValue: !Sub '${Environment}-OrdersTableName'
+          ORDER_TOPIC_ARN:
+            Fn::ImportValue: !Sub '${Environment}-OrderEventsTopicArn'
+          LOG_LEVEL: INFO
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: OrderProcessingPOC
+  
+  EmailLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${Environment}-EmailLambda'
+      Runtime: dotnet8
+      Handler: EmailLambda::EmailLambda.Function::FunctionHandler
+      Code:
+        S3Bucket: !Ref DeploymentBucket
+        S3Key: !Sub 'lambda/email-lambda-${Version}.zip'
+      Role:
+        Fn::ImportValue: !Sub '${Environment}-EmailLambdaRoleArn'
+      MemorySize: 256
+      Timeout: 60
+      Environment:
+        Variables:
+          EMAIL_FROM: noreply@example.com
+          LOG_LEVEL: INFO
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: OrderProcessingPOC
+  
+  EmailEventSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn:
+        Fn::ImportValue: !Sub '${Environment}-OrderEmailQueueArn'
+      FunctionName: !Ref EmailLambdaFunction
+      BatchSize: 1
+  
+  AuditLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${Environment}-AuditLambda'
+      Runtime: dotnet8
+      Handler: AuditLambda::AuditLambda.Function::FunctionHandler
+      Code:
+        S3Bucket: !Ref DeploymentBucket
+        S3Key: !Sub 'lambda/audit-lambda-${Version}.zip'
+      Role:
+        Fn::ImportValue: !Sub '${Environment}-AuditLambdaRoleArn'
+      MemorySize: 256
+      Timeout: 30
+      Environment:
+        Variables:
+          AUDIT_TABLE_NAME:
+            Fn::ImportValue: !Sub '${Environment}-AuditLogsTableName'
+          LOG_LEVEL: INFO
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: OrderProcessingPOC
+  
+  AuditEventSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn:
+        Fn::ImportValue: !Sub '${Environment}-OrderAuditQueueArn'
+      FunctionName: !Ref AuditLambdaFunction
+      BatchSize: 1
+
+Outputs:
+  OrderApiFunctionArn:
+    Description: Order API Lambda function ARN
+    Value: !GetAtt OrderApiFunction.Arn
+    Export:
+      Name: !Sub '${Environment}-OrderApiFunctionArn'
+  
+  OrderApiFunctionName:
+    Description: Order API Lambda function name
+    Value: !Ref OrderApiFunction
+    Export:
+      Name: !Sub '${Environment}-OrderApiFunctionName'
+  
+  EmailLambdaFunctionArn:
+    Description: Email Lambda function ARN
+    Value: !GetAtt EmailLambdaFunction.Arn
+    Export:
+      Name: !Sub '${Environment}-EmailLambdaFunctionArn'
+  
+  AuditLambdaFunctionArn:
+    Description: Audit Lambda function ARN
+    Value: !GetAtt AuditLambdaFunction.Arn
+    Export:
+      Name: !Sub '${Environment}-AuditLambdaFunctionArn'

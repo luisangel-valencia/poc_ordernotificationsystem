@@ -1,0 +1,178 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Messaging Layer - SNS Topics and SQS Queues for Order Processing POC'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Description: Environment name for resource naming and tagging
+
+Resources:
+  # SNS Topic
+  OrderEventsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub '${Environment}-OrderEvents'
+      DisplayName: Order Events Topic
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: OrderProcessingPOC
+  
+  # Dead Letter Queues
+  OrderEmailDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub '${Environment}-OrderEmailDLQ'
+      MessageRetentionPeriod: 1209600  # 14 days
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: OrderProcessingPOC
+  
+  OrderAuditDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub '${Environment}-OrderAuditDLQ'
+      MessageRetentionPeriod: 1209600  # 14 days
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: OrderProcessingPOC
+  
+  # Main Queues
+  OrderEmailQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub '${Environment}-OrderEmailQueue'
+      VisibilityTimeout: 70  # Lambda timeout (60s) + buffer
+      ReceiveMessageWaitTimeSeconds: 20  # Long polling
+      MessageRetentionPeriod: 345600  # 4 days
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt OrderEmailDLQ.Arn
+        maxReceiveCount: 3
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: OrderProcessingPOC
+  
+  OrderAuditQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub '${Environment}-OrderAuditQueue'
+      VisibilityTimeout: 40  # Lambda timeout (30s) + buffer
+      ReceiveMessageWaitTimeSeconds: 20  # Long polling
+      MessageRetentionPeriod: 345600  # 4 days
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt OrderAuditDLQ.Arn
+        maxReceiveCount: 3
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: OrderProcessingPOC
+  
+  # Queue Policies
+  OrderEmailQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref OrderEmailQueue
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: sns.amazonaws.com
+            Action:
+              - sqs:SendMessage
+            Resource: !GetAtt OrderEmailQueue.Arn
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !Ref OrderEventsTopic
+  
+  OrderAuditQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref OrderAuditQueue
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: sns.amazonaws.com
+            Action:
+              - sqs:SendMessage
+            Resource: !GetAtt OrderAuditQueue.Arn
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !Ref OrderEventsTopic
+  
+  # SNS Subscriptions
+  EmailQueueSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: sqs
+      TopicArn: !Ref OrderEventsTopic
+      Endpoint: !GetAtt OrderEmailQueue.Arn
+      RawMessageDelivery: true
+  
+  AuditQueueSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: sqs
+      TopicArn: !Ref OrderEventsTopic
+      Endpoint: !GetAtt OrderAuditQueue.Arn
+      RawMessageDelivery: true
+
+Outputs:
+  OrderEventsTopicArn:
+    Description: SNS topic ARN for order events
+    Value: !Ref OrderEventsTopic
+    Export:
+      Name: !Sub '${Environment}-OrderEventsTopicArn'
+  
+  OrderEmailQueueUrl:
+    Description: SQS queue URL for email processing
+    Value: !Ref OrderEmailQueue
+    Export:
+      Name: !Sub '${Environment}-OrderEmailQueueUrl'
+  
+  OrderEmailQueueArn:
+    Description: SQS queue ARN for email processing
+    Value: !GetAtt OrderEmailQueue.Arn
+    Export:
+      Name: !Sub '${Environment}-OrderEmailQueueArn'
+  
+  OrderAuditQueueUrl:
+    Description: SQS queue URL for audit processing
+    Value: !Ref OrderAuditQueue
+    Export:
+      Name: !Sub '${Environment}-OrderAuditQueueUrl'
+  
+  OrderAuditQueueArn:
+    Description: SQS queue ARN for audit processing
+    Value: !GetAtt OrderAuditQueue.Arn
+    Export:
+      Name: !Sub '${Environment}-OrderAuditQueueArn'
+  
+  OrderEmailDLQUrl:
+    Description: Dead letter queue URL for email processing
+    Value: !Ref OrderEmailDLQ
+    Export:
+      Name: !Sub '${Environment}-OrderEmailDLQUrl'
+  
+  OrderAuditDLQUrl:
+    Description: Dead letter queue URL for audit processing
+    Value: !Ref OrderAuditDLQ
+    Export:
+      Name: !Sub '${Environment}-OrderAuditDLQUrl'

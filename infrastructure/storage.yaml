@@ -1,0 +1,95 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Storage Layer - DynamoDB Tables for Order Processing POC'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Description: Environment name for resource naming and tagging
+
+Resources:
+  OrdersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${Environment}-Orders'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: OrderId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: OrderId
+          KeyType: HASH
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: OrderProcessingPOC
+  
+  AuditLogsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${Environment}-AuditLogs'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: AuditId
+          AttributeType: S
+        - AttributeName: Timestamp
+          AttributeType: S
+        - AttributeName: OrderId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: AuditId
+          KeyType: HASH
+        - AttributeName: Timestamp
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: OrderIdIndex
+          KeySchema:
+            - AttributeName: OrderId
+              KeyType: HASH
+            - AttributeName: Timestamp
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: OrderProcessingPOC
+
+Outputs:
+  OrdersTableName:
+    Description: Orders DynamoDB table name
+    Value: !Ref OrdersTable
+    Export:
+      Name: !Sub '${Environment}-OrdersTableName'
+  
+  OrdersTableArn:
+    Description: Orders DynamoDB table ARN
+    Value: !GetAtt OrdersTable.Arn
+    Export:
+      Name: !Sub '${Environment}-OrdersTableArn'
+  
+  AuditLogsTableName:
+    Description: Audit logs DynamoDB table name
+    Value: !Ref AuditLogsTable
+    Export:
+      Name: !Sub '${Environment}-AuditLogsTableName'
+  
+  AuditLogsTableArn:
+    Description: Audit logs DynamoDB table ARN
+    Value: !GetAtt AuditLogsTable.Arn
+    Export:
+      Name: !Sub '${Environment}-AuditLogsTableArn'
