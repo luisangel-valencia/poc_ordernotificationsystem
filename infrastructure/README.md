@@ -46,6 +46,20 @@ Templates must be deployed in this order due to dependencies:
 
 ## Quick Deploy
 
+### PowerShell (Windows)
+
+Deploy all stacks:
+```powershell
+.\deploy-all.ps1 -Environment dev -Version v1.0.0 -DeploymentBucket your-deployment-bucket
+```
+
+Delete all stacks:
+```powershell
+.\delete-all.ps1 -Environment dev
+```
+
+### Bash (Linux/Mac)
+
 Deploy all stacks:
 ```bash
 chmod +x deploy-all.sh
@@ -59,6 +73,48 @@ chmod +x delete-all.sh
 ```
 
 ## Manual Deployment
+
+### PowerShell
+
+Deploy individual stacks:
+
+```powershell
+# 1. Storage
+aws cloudformation deploy `
+  --template-file storage.yaml `
+  --stack-name order-processing-dev-storage `
+  --parameter-overrides Environment=dev
+
+# 2. Messaging
+aws cloudformation deploy `
+  --template-file messaging.yaml `
+  --stack-name order-processing-dev-messaging `
+  --parameter-overrides Environment=dev
+
+# 3. IAM Roles
+aws cloudformation deploy `
+  --template-file iam-roles.yaml `
+  --stack-name order-processing-dev-iam `
+  --parameter-overrides Environment=dev `
+  --capabilities CAPABILITY_NAMED_IAM
+
+# 4. Lambda Functions
+aws cloudformation deploy `
+  --template-file lambda-functions.yaml `
+  --stack-name order-processing-dev-lambda `
+  --parameter-overrides `
+    Environment=dev `
+    Version=v1.0.0 `
+    DeploymentBucket=your-bucket
+
+# 5. API Gateway
+aws cloudformation deploy `
+  --template-file api-gateway.yaml `
+  --stack-name order-processing-dev-api `
+  --parameter-overrides Environment=dev
+```
+
+### Bash
 
 Deploy individual stacks:
 
