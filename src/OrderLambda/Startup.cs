@@ -2,10 +2,10 @@ using Amazon.DynamoDBv2;
 using Amazon.SimpleNotificationService;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using OrderApi.Services;
-using OrderApi.Validators;
+using OrderLambda.Services;
+using OrderLambda.Validators;
 
-namespace OrderApi;
+namespace OrderLambda;
 
 /// <summary>
 /// Configures dependency injection for the Lambda function

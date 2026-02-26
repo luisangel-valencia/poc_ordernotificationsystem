@@ -2,14 +2,14 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.APIGatewayEvents;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using OrderApi.Models;
-using OrderApi.Services;
-using OrderApi.Validators;
+using OrderLambda.Models;
+using OrderLambda.Services;
+using OrderLambda.Validators;
 using System.Text.Json;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 
-namespace OrderApi;
+namespace OrderLambda;
 
 public class Function
 {

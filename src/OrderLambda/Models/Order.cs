@@ -1,4 +1,4 @@
-namespace OrderApi.Models;
+namespace OrderLambda.Models;
 
 public class Order
 {

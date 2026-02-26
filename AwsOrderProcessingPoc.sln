@@ -8,7 +8,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{D3853313
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared", "src\Shared\Shared.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrderApi", "src\OrderApi\OrderApi.csproj", "{D125D4DB-CFF0-43A2-BA28-B705FF31B5DB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrderLambda", "src\OrderLambda\OrderLambda.csproj", "{D125D4DB-CFF0-43A2-BA28-B705FF31B5DB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmailLambda", "src\EmailLambda\EmailLambda.csproj", "{489B6731-6CAC-4CF1-80F2-1E9D11E93BC1}"
 EndProject

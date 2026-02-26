@@ -1,7 +1,7 @@
 using FluentValidation;
-using OrderApi.Models;
+using OrderLambda.Models;
 
-namespace OrderApi.Validators;
+namespace OrderLambda.Validators;
 
 public class OrderValidator : AbstractValidator<Order>
 {

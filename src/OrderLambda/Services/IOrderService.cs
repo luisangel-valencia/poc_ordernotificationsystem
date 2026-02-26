@@ -1,6 +1,6 @@
-using OrderApi.Models;
+using OrderLambda.Models;
 
-namespace OrderApi.Services;
+namespace OrderLambda.Services;
 
 public interface IOrderService
 {

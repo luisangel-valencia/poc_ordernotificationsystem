@@ -1,10 +1,10 @@
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Microsoft.Extensions.Logging;
-using OrderApi.Models;
+using OrderLambda.Models;
 using System.Text.Json;
 
-namespace OrderApi.Services;
+namespace OrderLambda.Services;
 
 public class OrderService : IOrderService
 {

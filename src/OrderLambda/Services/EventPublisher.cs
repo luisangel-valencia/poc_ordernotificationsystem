@@ -1,10 +1,10 @@
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using Microsoft.Extensions.Logging;
-using OrderApi.Models;
+using OrderLambda.Models;
 using System.Text.Json;
 
-namespace OrderApi.Services;
+namespace OrderLambda.Services;
 
 public class EventPublisher
 {
