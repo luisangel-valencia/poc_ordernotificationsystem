@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 0 0 5px 5px;
+        }
+        .order-details {
+            margin: 20px 0;
+        }
+        .order-items {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .order-items th {
+            background-color: #f2f2f2;
+            padding: 10px;
+            text-align: left;
+            border-bottom: 2px solid #ddd;
+        }
+        .order-items td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .total {
+            font-weight: bold;
+            font-size: 1.2em;
+            text-align: right;
+            margin-top: 10px;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Order Confirmation</h1>
+    </div>
+    <div class="content">
+        <p>Dear {{CustomerName}},</p>
+        <p>Thank you for your order! We have received your order and it is being processed.</p>
+        
+        <div class="order-details">
+            <p><strong>Order ID:</strong> {{OrderId}}</p>
+            <p><strong>Order Date:</strong> {{CreatedAt}}</p>
+        </div>
+
+        <h3>Order Items:</h3>
+        <table class="order-items">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{OrderItems}}
+            </tbody>
+        </table>
+
+        <div class="total">
+            Total: ${{TotalAmount}}
+        </div>
+
+        <p>If you have any questions about your order, please contact our customer support.</p>
+    </div>
+    <div class="footer">
+        <p>This is an automated message. Please do not reply to this email.</p>
+    </div>
+</body>
+</html>
