@@ -1,0 +1,154 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  AWS_REGION: us-east-1
+  DOTNET_VERSION: '8.0.x'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      
+      - name: Restore dependencies
+        run: |
+          dotnet restore src/OrderLambda/OrderLambda.csproj
+          dotnet restore src/EmailLambda/EmailLambda.csproj
+          dotnet restore src/AuditLambda/AuditLambda.csproj
+      
+      - name: Build
+        run: |
+          dotnet build src/OrderLambda/OrderLambda.csproj --configuration Release --no-restore
+          dotnet build src/EmailLambda/EmailLambda.csproj --configuration Release --no-restore
+          dotnet build src/AuditLambda/AuditLambda.csproj --configuration Release --no-restore
+      
+      - name: Run unit tests
+        run: |
+          if [ -d "tests/OrderLambda.Tests" ]; then
+            dotnet test tests/OrderLambda.Tests/OrderLambda.Tests.csproj --configuration Release --no-build --verbosity normal
+          fi
+          if [ -d "tests/EmailLambda.Tests" ]; then
+            dotnet test tests/EmailLambda.Tests/EmailLambda.Tests.csproj --configuration Release --no-build --verbosity normal
+          fi
+          if [ -d "tests/AuditLambda.Tests" ]; then
+            dotnet test tests/AuditLambda.Tests/AuditLambda.Tests.csproj --configuration Release --no-build --verbosity normal
+          fi
+      
+      - name: Package Lambda functions
+        run: |
+          dotnet publish src/OrderLambda/OrderLambda.csproj -c Release -o publish/order-lambda
+          dotnet publish src/EmailLambda/EmailLambda.csproj -c Release -o publish/email-lambda
+          dotnet publish src/AuditLambda/AuditLambda.csproj -c Release -o publish/audit-lambda
+          
+          cd publish/order-lambda && zip -r ../../order-lambda.zip . && cd ../..
+          cd publish/email-lambda && zip -r ../../email-lambda.zip . && cd ../..
+          cd publish/audit-lambda && zip -r ../../audit-lambda.zip . && cd ../..
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: lambda-packages
+          path: |
+            order-lambda.zip
+            email-lambda.zip
+            audit-lambda.zip
+  
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: lambda-packages
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Upload Lambda packages to S3
+        run: |
+          aws s3 cp order-lambda.zip s3://${{ secrets.DEPLOYMENT_BUCKET }}/lambda/order-lambda-${{ github.sha }}.zip
+          aws s3 cp email-lambda.zip s3://${{ secrets.DEPLOYMENT_BUCKET }}/lambda/email-lambda-${{ github.sha }}.zip
+          aws s3 cp audit-lambda.zip s3://${{ secrets.DEPLOYMENT_BUCKET }}/lambda/audit-lambda-${{ github.sha }}.zip
+      
+      - name: Deploy CloudFormation stacks
+        run: |
+          # Deploy Storage stack
+          aws cloudformation deploy \
+            --template-file infrastructure/storage.yaml \
+            --stack-name order-processing-dev-storage \
+            --parameter-overrides Environment=dev \
+            --no-fail-on-empty-changeset
+          
+          # Deploy Messaging stack
+          aws cloudformation deploy \
+            --template-file infrastructure/messaging.yaml \
+            --stack-name order-processing-dev-messaging \
+            --parameter-overrides Environment=dev \
+            --no-fail-on-empty-changeset
+          
+          # Deploy IAM Roles stack
+          aws cloudformation deploy \
+            --template-file infrastructure/iam-roles.yaml \
+            --stack-name order-processing-dev-iam \
+            --parameter-overrides Environment=dev \
+            --capabilities CAPABILITY_NAMED_IAM \
+            --no-fail-on-empty-changeset
+          
+          # Deploy Lambda Functions stack
+          aws cloudformation deploy \
+            --template-file infrastructure/lambda-functions.yaml \
+            --stack-name order-processing-dev-lambda \
+            --parameter-overrides \
+              Environment=dev \
+              Version=${{ github.sha }} \
+              DeploymentBucket=${{ secrets.DEPLOYMENT_BUCKET }} \
+            --no-fail-on-empty-changeset
+          
+          # Deploy API Gateway stack
+          aws cloudformation deploy \
+            --template-file infrastructure/api-gateway.yaml \
+            --stack-name order-processing-dev-api \
+            --parameter-overrides Environment=dev \
+            --no-fail-on-empty-changeset
+      
+      - name: Update Lambda function code
+        run: |
+          aws lambda update-function-code \
+            --function-name dev-OrderApi \
+            --s3-bucket ${{ secrets.DEPLOYMENT_BUCKET }} \
+            --s3-key lambda/order-lambda-${{ github.sha }}.zip
+          
+          aws lambda update-function-code \
+            --function-name dev-EmailLambda \
+            --s3-bucket ${{ secrets.DEPLOYMENT_BUCKET }} \
+            --s3-key lambda/email-lambda-${{ github.sha }}.zip
+          
+          aws lambda update-function-code \
+            --function-name dev-AuditLambda \
+            --s3-bucket ${{ secrets.DEPLOYMENT_BUCKET }} \
+            --s3-key lambda/audit-lambda-${{ github.sha }}.zip

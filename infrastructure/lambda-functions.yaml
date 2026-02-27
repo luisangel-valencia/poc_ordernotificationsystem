@@ -25,10 +25,10 @@ Resources:
     Properties:
       FunctionName: !Sub '${Environment}-OrderApi'
       Runtime: dotnet8
-      Handler: OrderApi::OrderApi.Function::FunctionHandler
+      Handler: OrderLambda::OrderLambda.Function::FunctionHandler
       Code:
         S3Bucket: !Ref DeploymentBucket
-        S3Key: !Sub 'lambda/order-api-${Version}.zip'
+        S3Key: !Sub 'lambda/order-lambda-${Version}.zip'
       Role:
         Fn::ImportValue: !Sub '${Environment}-OrderApiRoleArn'
       MemorySize: 512
