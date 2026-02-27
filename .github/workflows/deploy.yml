@@ -97,29 +97,47 @@ jobs:
       
       - name: Deploy CloudFormation stacks
         run: |
+          set -e
+          
           # Deploy Storage stack
+          echo "Deploying Storage stack..."
           aws cloudformation deploy \
             --template-file infrastructure/storage.yaml \
             --stack-name order-processing-dev-storage \
             --parameter-overrides Environment=dev \
-            --no-fail-on-empty-changeset
+            --no-fail-on-empty-changeset || {
+              echo "Storage stack deployment failed"
+              aws cloudformation describe-stack-events --stack-name order-processing-dev-storage --max-items 5
+              exit 1
+            }
           
           # Deploy Messaging stack
+          echo "Deploying Messaging stack..."
           aws cloudformation deploy \
             --template-file infrastructure/messaging.yaml \
             --stack-name order-processing-dev-messaging \
             --parameter-overrides Environment=dev \
-            --no-fail-on-empty-changeset
+            --no-fail-on-empty-changeset || {
+              echo "Messaging stack deployment failed"
+              aws cloudformation describe-stack-events --stack-name order-processing-dev-messaging --max-items 5
+              exit 1
+            }
           
           # Deploy IAM Roles stack
+          echo "Deploying IAM stack..."
           aws cloudformation deploy \
             --template-file infrastructure/iam-roles.yaml \
             --stack-name order-processing-dev-iam \
             --parameter-overrides Environment=dev \
             --capabilities CAPABILITY_NAMED_IAM \
-            --no-fail-on-empty-changeset
+            --no-fail-on-empty-changeset || {
+              echo "IAM stack deployment failed"
+              aws cloudformation describe-stack-events --stack-name order-processing-dev-iam --max-items 5
+              exit 1
+            }
           
           # Deploy Lambda Functions stack
+          echo "Deploying Lambda stack..."
           aws cloudformation deploy \
             --template-file infrastructure/lambda-functions.yaml \
             --stack-name order-processing-dev-lambda \
@@ -127,14 +145,23 @@ jobs:
               Environment=dev \
               Version=${{ github.sha }} \
               DeploymentBucket=${{ secrets.DEPLOYMENT_BUCKET }} \
-            --no-fail-on-empty-changeset
+            --no-fail-on-empty-changeset || {
+              echo "Lambda stack deployment failed"
+              aws cloudformation describe-stack-events --stack-name order-processing-dev-lambda --max-items 5
+              exit 1
+            }
           
           # Deploy API Gateway stack
+          echo "Deploying API Gateway stack..."
           aws cloudformation deploy \
             --template-file infrastructure/api-gateway.yaml \
             --stack-name order-processing-dev-api \
             --parameter-overrides Environment=dev \
-            --no-fail-on-empty-changeset
+            --no-fail-on-empty-changeset || {
+              echo "API Gateway stack deployment failed"
+              aws cloudformation describe-stack-events --stack-name order-processing-dev-api --max-items 5
+              exit 1
+            }
       
       - name: Update Lambda function code
         run: |
