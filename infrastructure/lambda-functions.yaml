@@ -61,7 +61,7 @@ Resources:
       Timeout: 60
       Environment:
         Variables:
-          EMAIL_FROM: noreply@example.com
+          EMAIL_FROM: luisangel.valencia@globant.com
           LOG_LEVEL: INFO
       Tags:
         - Key: Environment
