@@ -108,7 +108,7 @@ jobs:
             --parameter-overrides Environment=dev \
             --no-fail-on-empty-changeset || {
               echo "Storage stack deployment failed"
-              aws cloudformation describe-stack-events --stack-name order-processing-dev-storage --max-items 5
+              aws cloudformation describe-stack-events --stack-name order-processing-dev-storage --max-items 5 || true
               exit 1
             }
           
@@ -120,11 +120,20 @@ jobs:
             --parameter-overrides Environment=dev \
             --no-fail-on-empty-changeset || {
               echo "Messaging stack deployment failed"
-              aws cloudformation describe-stack-events --stack-name order-processing-dev-messaging --max-items 5
+              aws cloudformation describe-stack-events --stack-name order-processing-dev-messaging --max-items 5 || true
               exit 1
             }
           
-          # Deploy IAM Roles stack
+          # Deploy IAM Roles stack (delete first if in ROLLBACK_COMPLETE state)
+          echo "Checking IAM stack status..."
+          IAM_STATUS=$(aws cloudformation describe-stacks --stack-name order-processing-dev-iam --query 'Stacks[0].StackStatus' --output text 2>/dev/null || echo "DOES_NOT_EXIST")
+          if [ "$IAM_STATUS" = "ROLLBACK_COMPLETE" ]; then
+            echo "IAM stack in ROLLBACK_COMPLETE state, deleting..."
+            aws cloudformation delete-stack --stack-name order-processing-dev-iam
+            aws cloudformation wait stack-delete-complete --stack-name order-processing-dev-iam
+            echo "IAM stack deleted successfully"
+          fi
+          
           echo "Deploying IAM stack..."
           aws cloudformation deploy \
             --template-file infrastructure/iam-roles.yaml \
@@ -133,11 +142,20 @@ jobs:
             --capabilities CAPABILITY_NAMED_IAM \
             --no-fail-on-empty-changeset || {
               echo "IAM stack deployment failed"
-              aws cloudformation describe-stack-events --stack-name order-processing-dev-iam --max-items 5
+              aws cloudformation describe-stack-events --stack-name order-processing-dev-iam --max-items 5 || true
               exit 1
             }
           
-          # Deploy Lambda Functions stack
+          # Deploy Lambda Functions stack (delete first if in ROLLBACK_COMPLETE state)
+          echo "Checking Lambda stack status..."
+          LAMBDA_STATUS=$(aws cloudformation describe-stacks --stack-name order-processing-dev-lambda --query 'Stacks[0].StackStatus' --output text 2>/dev/null || echo "DOES_NOT_EXIST")
+          if [ "$LAMBDA_STATUS" = "ROLLBACK_COMPLETE" ]; then
+            echo "Lambda stack in ROLLBACK_COMPLETE state, deleting..."
+            aws cloudformation delete-stack --stack-name order-processing-dev-lambda
+            aws cloudformation wait stack-delete-complete --stack-name order-processing-dev-lambda
+            echo "Lambda stack deleted successfully"
+          fi
+          
           echo "Deploying Lambda stack..."
           aws cloudformation deploy \
             --template-file infrastructure/lambda-functions.yaml \
@@ -148,7 +166,7 @@ jobs:
               DeploymentBucket=${{ secrets.DEPLOYMENT_BUCKET }} \
             --no-fail-on-empty-changeset || {
               echo "Lambda stack deployment failed"
-              aws cloudformation describe-stack-events --stack-name order-processing-dev-lambda --max-items 5
+              aws cloudformation describe-stack-events --stack-name order-processing-dev-lambda --max-items 5 || true
               exit 1
             }
           
@@ -160,7 +178,7 @@ jobs:
             --parameter-overrides Environment=dev \
             --no-fail-on-empty-changeset || {
               echo "API Gateway stack deployment failed"
-              aws cloudformation describe-stack-events --stack-name order-processing-dev-api --max-items 5
+              aws cloudformation describe-stack-events --stack-name order-processing-dev-api --max-items 5 || true
               exit 1
             }
       
