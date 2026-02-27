@@ -1,0 +1,14 @@
+{
+  "customerName": "Jane Smith",
+  "customerEmail": "",
+  "items": [
+    {
+      "productId": "PROD-003",
+      "productName": "Keyboard",
+      "quantity": 1,
+      "price": 79.99,
+      "subtotal": 79.99
+    }
+  ],
+  "totalAmount": 79.99
+}

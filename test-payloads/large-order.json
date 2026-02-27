@@ -1,0 +1,43 @@
+{
+  "customerName": "Alice Williams",
+  "customerEmail": "alice.williams@example.com",
+  "customerId": "CUST-67890",
+  "items": [
+    {
+      "productId": "PROD-101",
+      "productName": "Laptop Stand",
+      "quantity": 1,
+      "price": 49.99,
+      "subtotal": 49.99
+    },
+    {
+      "productId": "PROD-102",
+      "productName": "Webcam HD",
+      "quantity": 2,
+      "price": 89.99,
+      "subtotal": 179.98
+    },
+    {
+      "productId": "PROD-103",
+      "productName": "Desk Lamp",
+      "quantity": 1,
+      "price": 34.50,
+      "subtotal": 34.50
+    },
+    {
+      "productId": "PROD-104",
+      "productName": "Monitor 27 inch",
+      "quantity": 1,
+      "price": 299.99,
+      "subtotal": 299.99
+    },
+    {
+      "productId": "PROD-105",
+      "productName": "Ergonomic Chair",
+      "quantity": 1,
+      "price": 399.99,
+      "subtotal": 399.99
+    }
+  ],
+  "totalAmount": 964.45
+}

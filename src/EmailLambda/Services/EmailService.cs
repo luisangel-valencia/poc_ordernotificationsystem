@@ -20,7 +20,7 @@ public class EmailService : IEmailService
     {
         _sesClient = sesClient;
         _logger = logger;
-        _fromEmail = Environment.GetEnvironmentVariable("EMAIL_FROM") ?? "noreply@example.com";
+        _fromEmail = Environment.GetEnvironmentVariable("EMAIL_FROM") ?? "luisangel.valencia@globant.com";
         
         // Load HTML template
         var templatePath = Path.Combine(AppContext.BaseDirectory, "Templates", "OrderConfirmation.html");
