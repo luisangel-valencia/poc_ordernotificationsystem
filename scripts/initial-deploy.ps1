@@ -13,19 +13,19 @@ $ErrorActionPreference = "Stop"
 Write-Host "Building Lambda functions..." -ForegroundColor Green
 
 # Build and package OrderLambda
-dotnet publish src/OrderLambda/OrderLambda.csproj -c Release -o publish/order-lambda
+dotnet publish src/OrderLambda/OrderLambda.csproj -c Release -r linux-x64 --self-contained false -o publish/order-lambda
 Push-Location publish/order-lambda
 Compress-Archive -Path * -DestinationPath ../../order-lambda.zip -Force
 Pop-Location
 
 # Build and package EmailLambda
-dotnet publish src/EmailLambda/EmailLambda.csproj -c Release -o publish/email-lambda
+dotnet publish src/EmailLambda/EmailLambda.csproj -c Release -r linux-x64 --self-contained false -o publish/email-lambda
 Push-Location publish/email-lambda
 Compress-Archive -Path * -DestinationPath ../../email-lambda.zip -Force
 Pop-Location
 
 # Build and package AuditLambda
-dotnet publish src/AuditLambda/AuditLambda.csproj -c Release -o publish/audit-lambda
+dotnet publish src/AuditLambda/AuditLambda.csproj -c Release -r linux-x64 --self-contained false -o publish/audit-lambda
 Push-Location publish/audit-lambda
 Compress-Archive -Path * -DestinationPath ../../audit-lambda.zip -Force
 Pop-Location

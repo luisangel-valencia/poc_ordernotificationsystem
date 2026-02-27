@@ -15,15 +15,15 @@ fi
 echo "Building Lambda functions..."
 
 # Build and package OrderLambda
-dotnet publish src/OrderLambda/OrderLambda.csproj -c Release -o publish/order-lambda
+dotnet publish src/OrderLambda/OrderLambda.csproj -c Release -r linux-x64 --self-contained false -o publish/order-lambda
 cd publish/order-lambda && zip -r ../../order-lambda.zip . && cd ../..
 
 # Build and package EmailLambda
-dotnet publish src/EmailLambda/EmailLambda.csproj -c Release -o publish/email-lambda
+dotnet publish src/EmailLambda/EmailLambda.csproj -c Release -r linux-x64 --self-contained false -o publish/email-lambda
 cd publish/email-lambda && zip -r ../../email-lambda.zip . && cd ../..
 
 # Build and package AuditLambda
-dotnet publish src/AuditLambda/AuditLambda.csproj -c Release -o publish/audit-lambda
+dotnet publish src/AuditLambda/AuditLambda.csproj -c Release -r linux-x64 --self-contained false -o publish/audit-lambda
 cd publish/audit-lambda && zip -r ../../audit-lambda.zip . && cd ../..
 
 echo "Uploading Lambda packages to S3..."
