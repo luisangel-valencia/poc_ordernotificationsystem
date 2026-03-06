@@ -14,6 +14,7 @@ public partial class MainPage : ContentPage
     {
         InitializeComponent();
         _apiClient = new OrderApiClient(ApiEndpoint);
+        CustomerEmailEntry.Text = "luisangel.valencia@globant.com";
     }
 
     private void OnInputChanged(object sender, TextChangedEventArgs e)
